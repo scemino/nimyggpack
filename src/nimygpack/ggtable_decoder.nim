@@ -3,11 +3,11 @@ import range_stream
 import xor_stream
 
 type
-  GGTableDecoder = object
+  GGTableDecoder* = object
     s: Stream
     offsets: seq[int]
     hash*: JsonNode
-  GGPackDecoder = object
+  GGPackDecoder* = object
     key: XorKey
     s: Stream
     entries*: Table[string, GGPackEntry]
