@@ -1,6 +1,6 @@
 import unittest
 import std/[streams, tables, json]
-import nimygpack
+import nimyggpack
 
 test "XorStream read all":
   let s = newString([44'u8, 187, 16, 237, 151, 51, 9, 79, 216, 227, 44])

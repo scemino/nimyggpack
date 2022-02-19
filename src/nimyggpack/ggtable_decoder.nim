@@ -108,7 +108,6 @@ proc newString*(bytes: openArray[byte]): string =
 
 proc extract*(self: GGPackDecoder, entry: string): Stream =
   let e = self.entries[entry]
-  echo e
   let size = e.offset + e.size
   let bytes = newRangeStream(self.s, (e.offset..size))
   newXorStream(bytes, e.size, self.key)
