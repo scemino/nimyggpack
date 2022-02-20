@@ -27,3 +27,9 @@ test "GGTableDecoder read all":
 }"""
   f.close
   doAssert actual == expected
+
+test "bnut decode":
+  let input = "hello world"
+  let encoded = bnutEncode(input)
+  let decoded = bnutDecode(encoded)
+  doAssert decoded == input

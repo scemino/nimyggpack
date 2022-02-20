@@ -1,10 +1,11 @@
 import std/[streams, tables, strformat, parseopt, strutils]
 import glob
-import nimyggpack/ggtable_decoder, nimyggpack/range_stream, nimyggpack/xor_stream
+import nimyggpack/ggtable_decoder, nimyggpack/range_stream, nimyggpack/xor_stream, nimyggpack/bnut_decoder
 
 export newGGTableDecoder, newGGPackDecoder, ggtable_decoder.GGPackDecoder, ggtable_decoder.GGTableDecoder, extract, extractTable, newString
 export newRangeStream
 export newXorStream, xorKeys
+export bnutEncode, bnutDecode
 
 const
   Usage = """

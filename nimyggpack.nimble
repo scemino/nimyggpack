@@ -10,3 +10,4 @@ srcDir        = "src"
 # Dependencies
 
 requires "nim >= 1.6.2"
+requires "glob >= 0.11.1"
