@@ -8,7 +8,7 @@ test "XorStream read all":
   let x = newXorStream(ss, s.len, xorKeys["5b6d"])
   doAssert x.readAll == "hello world"
 
-test "GGTableDecoder read all":
+test "Table decode":
   let f = newFileStream("tests/data/mapEncoded")
   let actual = pretty(newGGTableDecoder(f).hash)
   let expected = """
@@ -26,6 +26,30 @@ test "GGTableDecoder read all":
   ]
 }"""
   f.close
+  doAssert actual == expected
+
+test "Table encode":
+  let data = """
+{
+  "integer": 5,
+  "array": [
+    null,
+    0,
+    1,
+    3.14,
+    "string",
+    {
+      "key": "value"
+    }
+  ]
+}"""
+  let j = parseJson(data)
+  var ss = newStringStream()
+  var encoder = newGGTableEncoder(ss)
+  encoder.writeTable j
+  ss.setPosition(0)
+  let actual = ss.readAll
+  let expected = open("tests/data/mapEncoded").readAll
   doAssert actual == expected
 
 test "bnut decode":

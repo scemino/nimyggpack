@@ -1,20 +1,11 @@
 import std/[streams, strformat, json, strutils]
+import ggtable_markers
 
 type
   GGTableDecoder* = object
     s: Stream
     offsets: seq[int]
     hash*: JsonNode
-
-const Signature = 0x04030201
-const Null = 1
-const Dictionary = 2
-const Array = 3
-const String = 4
-const Integer = 5
-const Double = 6
-const Offsets = 7
-const EndOffsets = 0xFFFFFFFF
 
 proc readPlo(s: Stream): seq[int] =
   let ploIndex = s.readUint32().int
@@ -23,11 +14,11 @@ proc readPlo(s: Stream): seq[int] =
   let c = s.readUint8()
   if c != Offsets:
     raise newException(Exception, "GGPack cannot find plo :(")
-  var offset = 0
+  var offset = 0'u32
   while offset != EndOffsets:
-    offset = s.readUint32().int
+    offset = s.readUint32()
     if offset != EndOffsets:
-      result.add(offset)
+      result.add(offset.int)
   s.setPosition(pos)
 
 proc readHash(self: GGTableDecoder): JsonNode

@@ -1,8 +1,8 @@
 import std/[streams, tables, strformat]
 import glob
-import nimyggpack/ggtable_decoder, nimyggpack/range_stream, nimyggpack/xor_stream, nimyggpack/bnut_decoder, nimyggpack/ggpack_decoder
+import nimyggpack/ggtable_decoder, nimyggpack/range_stream, nimyggpack/xor_stream, nimyggpack/bnut_decoder, nimyggpack/ggpack_decoder, nimyggpack/ggtable_encoder
 
-export newGGTableDecoder, newGGPackDecoder, ggpack_decoder.GGPackDecoder, ggtable_decoder.GGTableDecoder, extract, extractTable, newString
+export newGGTableDecoder, newGGPackDecoder, newGGTableEncoder, ggpack_decoder.GGPackDecoder, ggtable_decoder.GGTableDecoder, extract, extractTable, newString, ggtable_encoder.writeTable
 export newRangeStream
 export newXorStream, xorKeys
 export bnutEncode, bnutDecode
