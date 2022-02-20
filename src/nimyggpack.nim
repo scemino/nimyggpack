@@ -1,8 +1,8 @@
-import std/[streams, tables, strformat, parseopt, strutils]
+import std/[streams, tables, strformat]
 import glob
-import nimyggpack/ggtable_decoder, nimyggpack/range_stream, nimyggpack/xor_stream, nimyggpack/bnut_decoder
+import nimyggpack/ggtable_decoder, nimyggpack/range_stream, nimyggpack/xor_stream, nimyggpack/bnut_decoder, nimyggpack/ggpack_decoder
 
-export newGGTableDecoder, newGGPackDecoder, ggtable_decoder.GGPackDecoder, ggtable_decoder.GGTableDecoder, extract, extractTable, newString
+export newGGTableDecoder, newGGPackDecoder, ggpack_decoder.GGPackDecoder, ggtable_decoder.GGTableDecoder, extract, extractTable, newString
 export newRangeStream
 export newXorStream, xorKeys
 export bnutEncode, bnutDecode
@@ -34,6 +34,8 @@ proc writeHelp() =
     quit(0)
 
 when isMainModule:
+  import std/[parseopt, strutils]
+
   var filename, pattern: string 
   var xorKey = "56ad"
   var cmdList: bool
