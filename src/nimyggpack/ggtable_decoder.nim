@@ -74,7 +74,7 @@ proc readHash(self: GGTableDecoder): JsonNode =
   result = newJObject()
   var c = self.s.readUint8
   if c != Dictionary:
-    raise newException(Exception, "trying to parse a non-hash")
+    raise newException(Exception, "trying to parse a non-hash: " & $c)
   let nPairs = self.s.readUint32()
   for i in 0..<nPairs:
     let key = self.readString(self.s.readUint32().int)
@@ -96,3 +96,8 @@ proc newGGTableDecoder*(s: Stream): GGTableDecoder =
 
   # read entries as hash
   result.hash = result.readHash()
+
+proc ggtableDecode*(input: string): JsonNode =
+  var s = newStringStream(input)
+  var decoder = newGGTableDecoder(s)
+  decoder.hash

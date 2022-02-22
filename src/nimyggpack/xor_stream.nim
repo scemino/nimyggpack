@@ -29,7 +29,7 @@ const xorKeys* = {
       0xC6, 0x00, 0xE4, 0x40, 0xC6], multiplier: 0x6D),           # delores
 }.toTable
 
-proc xorReadData(s: Stream, buffer: pointer, bufLen: int): int =
+proc xorDecodeData(s: Stream, buffer: pointer, bufLen: int): int =
   var s = XorStream(s)
   result = s.s.readData(buffer, bufLen)
   var buf = cast[ptr UncheckedArray[byte]](buffer)
@@ -39,6 +39,16 @@ proc xorReadData(s: Stream, buffer: pointer, bufLen: int): int =
     buf[i] = (x xor s.previous).byte
     s.previous = x
     inc s.pos
+
+proc xorEncodeData(s: Stream, buffer: pointer, bufLen: int): int =
+  var s = XorStream(s)
+  result = s.s.readData(buffer, bufLen)
+  var buf = cast[ptr UncheckedArray[byte]](buffer)
+  for i in 0..<bufLen:
+    var x = buf[i].int xor s.previous
+    buf[i] = (x xor s.key.magicBytes[i and 0x0F] xor (i *
+        s.key.multiplier)).byte
+    s.previous = x
 
 proc xorSetPosition (s: Stream, pos: int) =
   var s = XorStream(s)
@@ -54,13 +64,32 @@ proc xorClose (s: Stream) =
 proc xorAtEnd (s: Stream): bool =
   XorStream(s).s.atEnd
 
-proc newXorStream*(s: Stream, len: int, key: XorKey): XorStream =
+proc newXorDecodeStream*(s: Stream, len: int, key: XorKey): XorStream =
   new(result)
   result.s = s
   result.previous = (len and 0xFF)
-  result.readDataImpl = xorReadData
+  result.readDataImpl = xorDecodeData
   result.setPositionImpl = xorSetPosition
   result.getPositionImpl = xorGetPosition
   result.atEndImpl = xorAtEnd
   result.closeImpl = xorClose
   result.key = key
+
+proc newXorEncodeStream*(s: Stream, len: int, key: XorKey): XorStream =
+  new(result)
+  result.s = s
+  result.previous = (len and 0xFF)
+  result.readDataImpl = xorEncodeData
+  result.setPositionImpl = xorSetPosition
+  result.getPositionImpl = xorGetPosition
+  result.atEndImpl = xorAtEnd
+  result.closeImpl = xorClose
+  result.key = key
+
+proc xorEncode*(s: string, key: XorKey): string =
+  var xorStream = newXorEncodeStream(newStringStream(s), s.len, key)
+  xorStream.readAll
+
+proc xorDecode*(s: string, key: XorKey): string =
+  var xorStream = newXorDecodeStream(newStringStream(s), s.len, key)
+  xorStream.readAll

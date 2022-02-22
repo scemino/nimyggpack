@@ -1,11 +1,17 @@
 import std/[streams, tables, strformat]
 import glob
-import nimyggpack/ggtable_decoder, nimyggpack/range_stream, nimyggpack/xor_stream, nimyggpack/bnut_decoder, nimyggpack/ggpack_decoder, nimyggpack/ggtable_encoder
+import nimyggpack/ggtable_decoder, nimyggpack/range_stream,
+    nimyggpack/xor_stream, nimyggpack/bnut_decoder, nimyggpack/ggpack_decoder,
+    nimyggpack/ggtable_encoder, nimyggpack/ggpack_builder
 
-export newGGTableDecoder, newGGPackDecoder, newGGTableEncoder, ggpack_decoder.GGPackDecoder, ggtable_decoder.GGTableDecoder, extract, extractTable, newString, ggtable_encoder.writeTable
+export newGGTableDecoder, newGGPackDecoder, newGGTableEncoder, newGGPackBuilder,
+    ggpack_decoder.GGPackDecoder, ggtable_decoder.GGTableDecoder, extract,
+    extractTable, newString, ggtable_encoder.writeTable,
+    ggpack_builder.addBytes, ggpack_builder.close
 export newRangeStream
-export newXorStream, xorKeys
+export newXorDecodeStream, newXorEncodeStream, xorKeys, xorDecode, xorEncode
 export bnutEncode, bnutDecode
+export ggtableEncode, ggtableDecode
 
 const
   Usage = """
@@ -30,13 +36,13 @@ proc list(pattern, path, xorKey: string) =
       echo k
 
 proc writeHelp() =
-    echo Usage
-    quit(0)
+  echo Usage
+  quit(0)
 
 when isMainModule:
   import std/[parseopt, strutils]
 
-  var filename, pattern: string 
+  var filename, pattern: string
   var xorKey = "56ad"
   var cmdList: bool
   var p = initOptParser()

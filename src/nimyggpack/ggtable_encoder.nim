@@ -62,7 +62,7 @@ proc writeArray(self: var GGTableEncoder, arr: seq[JsonNode]) =
   for v in arr:
     self.writeValue(v)
   self.writeMarker(Array)
-  
+
 proc writeMap(self: var GGTableEncoder, table: OrderedTable[string, JsonNode]) =
   self.writeMarker(Dictionary)
   self.s.write table.len.int32
@@ -75,7 +75,7 @@ proc writeKey(self: var GGTableEncoder, key: string) =
   for c in key:
     self.s.write c.byte
   self.s.write 0'u8
-  
+
 proc writeKeys(self: var GGTableEncoder) =
   let plo = self.s.getPosition
   self.s.setPosition 8
@@ -107,3 +107,10 @@ proc writeTable*(self: var GGTableEncoder, input: JsonNode) =
 
 proc newGGTableEncoder*(s: Stream): GGTableEncoder =
   result.s = s
+
+proc ggtableEncode*(input: JsonNode): string =
+  var s = newStringStream()
+  var encoder = newGGTableEncoder(s)
+  encoder.writeTable(input)
+  s.setPosition 0
+  s.readAll
