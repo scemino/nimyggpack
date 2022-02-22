@@ -4,25 +4,28 @@ import xor_stream
 import ggtable_encoder
 
 type
-  GGPackBuilder* = object
+  GGPackWriter* = object
     s: Stream
     entries: OrderedTable[string, GGPackEntry]
     key: XorKey
+    closeStream: bool
 
-proc newGGPackBuilder*(s: Stream, key: XorKey): GGPackBuilder =
+proc newGGPackWriter*(s: Stream, key: XorKey;
+    closeStream = true): GGPackWriter =
   result.s = s
   result.key = key
   result.s.write 0'i32
   result.s.write 0'i32
+  result.closeStream = closeStream
 
-proc addBytes*(self: var GGPackBuilder, name, buffer: string) =
+proc write*(self: var GGPackWriter, name, buffer: string) =
   let bytes = xorEncode(buffer, self.key)
   var entry = GGPackEntry(offset: self.s.getPosition, size: bytes.len)
   self.s.write bytes
   self.entries[name] = entry
 
-proc addTable*(self: var GGPackBuilder, name: string, table: JsonNode) =
-  self.addBytes(name, ggtableEncode(table))
+proc write*(self: var GGPackWriter, name: string, table: JsonNode) =
+  self.write(name, ggtableEncode(table))
 
 proc toJson(filename: string, entry: GGPackEntry): JsonNode =
   result = newJObject()
@@ -30,7 +33,7 @@ proc toJson(filename: string, entry: GGPackEntry): JsonNode =
   result.add("offset", newJInt(entry.offset))
   result.add("size", newJInt(entry.size))
 
-proc close*(self: var GGPackBuilder) =
+proc close*(self: var GGPackWriter) =
   let entriesOffset = self.s.getPosition
   var jPack = newJObject()
   var jFiles = newJArray()
@@ -42,4 +45,5 @@ proc close*(self: var GGPackBuilder) =
   self.s.setPosition 0
   self.s.write entriesOffset.int32
   self.s.write entriesBytes.len.int32
-  # self.s.close
+  if self.closeStream:
+    self.s.close

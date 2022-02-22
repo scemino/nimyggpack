@@ -2,12 +2,12 @@ import std/[streams, tables, strformat]
 import glob
 import nimyggpack/ggtable_decoder, nimyggpack/range_stream,
     nimyggpack/xor_stream, nimyggpack/bnut_decoder, nimyggpack/ggpack_decoder,
-    nimyggpack/ggtable_encoder, nimyggpack/ggpack_builder
+    nimyggpack/ggtable_encoder, nimyggpack/ggpack_writer
 
-export newGGTableDecoder, newGGPackDecoder, newGGTableEncoder, newGGPackBuilder,
+export newGGTableDecoder, newGGPackDecoder, newGGTableEncoder, newGGPackWriter,
     ggpack_decoder.GGPackDecoder, ggtable_decoder.GGTableDecoder, extract,
     extractTable, newString, ggtable_encoder.writeTable,
-    ggpack_builder.addBytes, ggpack_builder.close
+    ggpack_writer.write, ggpack_writer.close
 export newRangeStream
 export newXorDecodeStream, newXorEncodeStream, xorKeys, xorDecode, xorEncode
 export bnutEncode, bnutDecode

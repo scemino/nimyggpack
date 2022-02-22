@@ -57,20 +57,37 @@ test "Table encode":
   doAssert actual == expected
   doAssert ggtableEncode(j) == expected
 
-test "bnut decode":
+test "bnut encode/decode":
   let input = "hello world"
   let encoded = bnutEncode(input)
   let decoded = bnutDecode(encoded)
   doAssert decoded == input
 
-test "ggpack decode":
+test "ggpack encode/decode":
+  let data = """
+{
+  "integer": 5,
+  "array": [
+    null,
+    0,
+    1,
+    3.14,
+    "string",
+    {
+      "key": "value"
+    }
+  ]
+}"""
   var s = newStringStream()
-  var builder = newGGPackBuilder(s, xorKeys["5b6d"])
-  builder.addBytes("foo.txt", "hello")
-  builder.addBytes("bar.txt", "world")
-  builder.close
+  var w = newGGPackWriter(s, xorKeys["5b6d"], false)
+  w.write("foo.txt", "hello")
+  w.write("bar.txt", "world")
+  w.write("nimy.wimpy", parseJson(data))
+  w.close
 
   s.setPosition 0
   let decoder = newGGPackDecoder(s, xorKeys["5b6d"])
   doAssert decoder.extract("foo.txt").readAll == "hello"
   doAssert decoder.extract("bar.txt").readAll == "world"
+  doAssert decoder.extract("nimy.wimpy").readAll != data
+  doAssert pretty(decoder.extractTable("nimy.wimpy")) == data
