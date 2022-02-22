@@ -1,8 +1,8 @@
 import std/[streams, tables, strformat]
 import glob
-import nimyggpack/ggtable_decoder, nimyggpack/range_stream,
-    nimyggpack/xor_stream, nimyggpack/bnut_decoder, nimyggpack/ggpack_decoder,
-    nimyggpack/ggtable_encoder, nimyggpack/ggpack_writer
+import nimyggpackpkg/ggtable_decoder, nimyggpackpkg/range_stream,
+    nimyggpackpkg/xor_stream, nimyggpackpkg/bnut_decoder, nimyggpackpkg/ggpack_decoder,
+    nimyggpackpkg/ggtable_encoder, nimyggpackpkg/ggpack_writer
 
 export newGGTableDecoder, newGGPackDecoder, newGGTableEncoder, newGGPackWriter,
     ggpack_decoder.GGPackDecoder, ggtable_decoder.GGTableDecoder, extract,
@@ -34,7 +34,7 @@ when isMainModule:
 
   type
     Command = enum
-      cmdList, cmdExtract
+      cmdList, cmdExtract, cmdUpdate
     Settings = object
       filename, pattern: string
       xorKey: string
@@ -82,6 +82,25 @@ when isMainModule:
         else:
           convert(decoder, k)
 
+  proc doUpdate(settings: Settings) =
+    echo fmt"update({settings.pattern}, {settings.filename}, {settings.xorKey})"
+    let backupFilename = settings.filename & ".bak"
+    let globPattern = glob(settings.pattern)
+    moveFile(settings.filename, backupFilename)
+    let decoder = newGGPackDecoder(newFileStream(backupFilename), xorKeys[settings.xorKey])
+    let fs = newFileStream(settings.filename, fmWrite)
+    var writer = newGGPackWriter(fs, xorKeys[settings.xorKey])
+    for (k, entry) in decoder.entries.pairs:
+      echo "Adding " & k & "..."
+      if k.matches(globPattern):
+        let f = open(k, fmRead)
+        writer.write(k, f.readAll)
+        f.close
+      else:
+        writer.write(k, decoder.extract(k).readAll)
+    writer.close
+    fs.close
+
   proc writeHelp() =
     echo Usage
     quit(0)
@@ -104,6 +123,9 @@ when isMainModule:
       of "x", "extract":
         settings.cmd = cmdExtract
         settings.pattern = val
+      of "u", "update":
+        settings.cmd = cmdUpdate
+        settings.pattern = val
       of "noconvert":
         settings.noconvert = true
     of cmdArgument:
@@ -115,3 +137,5 @@ when isMainModule:
     doList(settings)
   of cmdExtract:
     doExtract(settings)
+  of cmdUpdate:
+    doUpdate(settings)
