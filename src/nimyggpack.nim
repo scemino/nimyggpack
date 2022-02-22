@@ -13,38 +13,80 @@ export newXorDecodeStream, newXorEncodeStream, xorKeys, xorDecode, xorEncode
 export bnutEncode, bnutDecode
 export ggtableEncode, ggtableDecode
 
-const
-  Usage = """
-nimyggpack - Tool to list files in ggpack files used in Thimbleweed Park.
-
-Usage:
-  nimyggpack [options]
-
-Options:  
-  --help,          -h        Shows this help and quits
-  --key=key        -k        Name of the key to decrypt/encrypt the data.
-                             Possible names: 56ad, 5bad, 566d, 5b6d, delores
-  --list=pattern   -l        List files in a ggpack file
-"""
-
-proc list(pattern, path, xorKey: string) =
-  echo fmt"list({pattern}, {path}, {xorKey})"
-  let globPattern = glob(pattern)
-  let decoder = newGGPackDecoder(newFileStream(path), xorKeys[xorKey])
-  for (k, entry) in decoder.entries.pairs:
-    if k.matches(globPattern):
-      echo k
-
-proc writeHelp() =
-  echo Usage
-  quit(0)
-
 when isMainModule:
-  import std/[parseopt, strutils]
+  import std/[parseopt, strutils, os, json]
 
-  var filename, pattern: string
-  var xorKey = "56ad"
-  var cmdList: bool
+  const
+    Usage = """
+  nimyggpack - Tool to list, extract files in ggpack files used in Thimbleweed Park.
+
+  Usage:
+    nimyggpack [options]
+
+  Options:  
+    --help,             -h        Shows this help and quits
+    --key=key           -k        Name of the key to decrypt/encrypt the data.
+                                  Possible names: 56ad, 5bad, 566d, 5b6d, delores
+    --list=pattern      -l        Lists files in a ggpack file
+    --extract=pattern   -x        Extracts files from a ggpack file
+    --noconvert                   Disables auto conversion: .bnut to .nut, .wimpy to json, .byack to .yack
+  """
+
+  type
+    Command = enum
+      cmdList, cmdExtract
+    Settings = object
+      filename, pattern: string
+      xorKey: string
+      cmd: Command
+      noconvert: bool
+
+  proc doList(settings: Settings) =
+    echo fmt"list({settings.pattern}, {settings.filename}, {settings.xorKey})"
+    let globPattern = glob(settings.pattern)
+    let decoder = newGGPackDecoder(newFileStream(settings.filename), xorKeys[settings.xorKey])
+    for (k, entry) in decoder.entries.pairs:
+      if k.matches(globPattern):
+        echo k
+  
+  proc convert(self: GGPackDecoder, filename: string) =
+    let (dir, name, ext) = splitFile(filename)
+    case ext.toLower
+    of ".bnut":
+      let f = open(joinPath(dir, name & ".nut"), fmWrite)
+      f.write bnutDecode(self.extract(filename).readAll)
+      f.close
+    of ".byack":
+      let f = open(joinPath(dir, name & ".yack"), fmWrite)
+      f.write self.extract(filename).readAll
+      f.close
+    of ".wimpy":
+      let f = open(filename, fmWrite)
+      f.write pretty(self.extractTable(filename))
+      f.close
+    else:
+      let f = open(filename, fmWrite)
+      f.write self.extract(filename).readAll
+      f.close
+  
+  proc doExtract(settings: Settings) =
+    echo fmt"extract({settings.pattern}, {settings.filename}, {settings.xorKey})"
+    let globPattern = glob(settings.pattern)
+    let decoder = newGGPackDecoder(newFileStream(settings.filename), xorKeys[settings.xorKey])
+    for (k, entry) in decoder.entries.pairs:
+      if k.matches(globPattern):
+        if settings.noconvert:
+          let f = open(k, fmWrite)
+          f.write decoder.extract(k).readAll
+          f.close
+        else:
+          convert(decoder, k)
+
+  proc writeHelp() =
+    echo Usage
+    quit(0)
+      
+  var settings = Settings(xorKey: "56ad")
   var p = initOptParser()
   # parse options
   for kind, key, val in p.getopt():
@@ -55,13 +97,21 @@ when isMainModule:
       of "h", "help":
         writeHelp()
       of "k", "key":
-        xorKey = val
+        settings.xorKey = val
       of "l", "list":
-        cmdList = true
-        pattern = val
+        settings.cmd = cmdList
+        settings.pattern = val
+      of "x", "extract":
+        settings.cmd = cmdExtract
+        settings.pattern = val
+      of "noconvert":
+        settings.noconvert = true
     of cmdArgument:
-      filename = key
-  if not cmdList or filename == "":
+      settings.filename = key
+  if settings.filename == "":
     writeHelp()
-  else:
-    list(pattern, filename, xorKey)
+  case settings.cmd:
+  of cmdList:
+    doList(settings)
+  of cmdExtract:
+    doExtract(settings)
