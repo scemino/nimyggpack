@@ -2,7 +2,7 @@ import std/[streams, tables, strformat]
 import glob
 import nimyggpackpkg/ggtable_decoder, nimyggpackpkg/range_stream,
     nimyggpackpkg/xor_stream, nimyggpackpkg/bnut_decoder, nimyggpackpkg/ggpack_decoder,
-    nimyggpackpkg/ggtable_encoder, nimyggpackpkg/ggpack_writer
+    nimyggpackpkg/ggtable_encoder, nimyggpackpkg/ggpack_writer, nimyggpackpkg/savegame
 
 export newGGTableDecoder, newGGPackDecoder, newGGTableEncoder, newGGPackWriter,
     ggpack_decoder.GGPackDecoder, ggtable_decoder.GGTableDecoder, extract,
@@ -12,6 +12,7 @@ export newRangeStream
 export newXorDecodeStream, newXorEncodeStream, xorKeys, xorDecode, xorEncode
 export bnutEncode, bnutDecode
 export ggtableEncode, ggtableDecode
+export Savegame
 
 when isMainModule:
   import std/[parseopt, strutils, os, json]
