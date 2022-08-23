@@ -13,6 +13,7 @@ export newXorDecodeStream, newXorEncodeStream, xorKeys, xorDecode, xorEncode
 export bnutEncode, bnutDecode
 export ggtableEncode, ggtableDecode
 export Savegame
+export loadSaveGame
 
 when isMainModule:
   import std/[parseopt, strutils, os, json]
