@@ -84,8 +84,9 @@ proc saveSaveGame*(path: string, savegame: Savegame) =
   var data = ggtableEncode(savegame.data)
   let hash = computeHash(data)
 
-  let fullSizeAndFooter = data.len + 16
-  let marker = (8 - ((data.len + 9) mod 8)).cint
+  let fullSize = 500000
+  let fullSizeAndFooter = fullSize + 16
+  let marker = (8 - ((fullSize + 9) mod 8)).cint
   data.setLen fullSizeAndFooter
 
   # write at the end 16 bytes: hashdata (4 bytes) + savetime (4 bytes) + marker (8 bytes)

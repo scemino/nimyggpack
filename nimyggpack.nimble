@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.2.0"
+version       = "0.3.0"
 author        = "scemino"
 description   = "A simple library to list or extract files from ggpack files."
 license       = "MIT"
