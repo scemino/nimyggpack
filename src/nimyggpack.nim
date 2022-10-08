@@ -3,6 +3,7 @@ import glob
 import nimyggpackpkg/ggtable_decoder, nimyggpackpkg/range_stream,
     nimyggpackpkg/xor_stream, nimyggpackpkg/bnut_decoder, nimyggpackpkg/ggpack_decoder,
     nimyggpackpkg/ggtable_encoder, nimyggpackpkg/ggpack_writer, nimyggpackpkg/savegame
+import nimyggpackpkg/achievement
 
 export newGGTableDecoder, newGGPackDecoder, newGGTableEncoder, newGGPackWriter,
     ggpack_decoder.GGPackDecoder, ggtable_decoder.GGTableDecoder, extract,
@@ -14,6 +15,7 @@ export bnutEncode, bnutDecode
 export ggtableEncode, ggtableDecode
 export Savegame
 export loadSaveGame, saveSaveGame
+export loadAchievements, saveAchievements
 
 when isMainModule:
   import std/[parseopt, strutils, os, json]
@@ -31,14 +33,16 @@ when isMainModule:
                                   Possible names: 56ad, 5bad, 566d, 5b6d, delores
     --list=pattern      -l        Lists files in a ggpack file
     --extract=pattern   -x        Extracts files from a ggpack file
-    --savetojson=file   -s        Extracts savegame to json
-    --savefromjson=file -j        Creates savegame from json
+    --savetojson=file   -st       Extracts savegame to json
+    --savefromjson=file -sf       Creates savegame from json
+    --achtojson=file    -at       Extracts Save.dat to json
+    --achfromjson=file  -af       Creates Save.dat from json
     --noconvert                   Disables auto conversion: .bnut to .nut, .wimpy to json, .byack to .yack
   """
 
   type
     Command = enum
-      cmdList, cmdExtract, cmdUpdate, cmdSaveToJson, cmdSaveFromJson
+      cmdList, cmdExtract, cmdUpdate, cmdSaveToJson, cmdSaveFromJson, cmdAchToJson, cmdAchFromJson
     Settings = object
       filename, pattern: string
       xorKey: string
@@ -92,6 +96,12 @@ when isMainModule:
     fn = changeFileExt(fn, ".json")
     writeFile(fn , pretty(savegame.data))
 
+  proc doAchToJson(settings: Settings) =
+    var fn = settings.pattern
+    let ach = loadAchievements(fn)
+    fn = changeFileExt(fn, ".json")
+    writeFile(fn , pretty(ach))
+
   proc doSaveFromJson(settings: Settings) =
     var fn = settings.pattern
     let json = parseFile(fn)
@@ -99,6 +109,12 @@ when isMainModule:
     let savegame = Savegame(data: json, time: savetime)
     fn = changeFileExt(fn, ".save")
     saveSaveGame(fn, savegame)
+
+  proc doAchFromJson(settings: Settings) =
+    var fn = settings.pattern
+    let json = parseFile(fn)
+    fn = changeFileExt(fn, ".dat")
+    saveAchievements(fn, json)
 
   proc doUpdate(settings: Settings) =
     echo fmt"update({settings.pattern}, {settings.filename}, {settings.xorKey})"
@@ -151,11 +167,17 @@ when isMainModule:
       of "u", "update":
         settings.cmd = cmdUpdate
         settings.pattern = val
-      of "s", "savetojson":
+      of "st", "savetojson":
         settings.cmd = cmdSaveToJson
         settings.pattern = val
-      of "j", "savefromjson":
+      of "sf", "savefromjson":
         settings.cmd = cmdSaveFromJson
+        settings.pattern = val
+      of "at", "achtojson":
+        settings.cmd = cmdAchToJson
+        settings.pattern = val
+      of "af", "achfromjson":
+        settings.cmd = cmdAchFromJson
         settings.pattern = val
       of "noconvert":
         settings.noconvert = true
@@ -176,3 +198,7 @@ when isMainModule:
     doSaveToJson(settings)
   of cmdSaveFromJson:
     doSaveFromJson(settings)
+  of cmdAchToJson:
+    doAchToJson(settings)
+  of cmdAchFromJson:
+    doAchFromJson(settings)
